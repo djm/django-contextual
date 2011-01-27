@@ -29,7 +29,8 @@ class HostnameTestModel(BaseTestModel):
     Allows rule matching against specific hostnames.
     """
     hostname = models.CharField(_("hostname"), max_length=255, 
-                help_text="Set to value of HTTP_HOST for positive match.")
+                help_text="Set to value of HTTP_HOST for positive match.",
+                unique=True)
 
 
 class QueryStringTestModel(BaseTestModel):

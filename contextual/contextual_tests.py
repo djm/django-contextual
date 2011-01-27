@@ -21,17 +21,39 @@ class BaseTest(object):
         for model in self.requires_models:
             models.register_models('contextual', model)
 
-    def test(self, request):
+    def _lookup_test(self, request):
         """ 
-        Finds a matching rule based upon this test and returns
-        the replacements that should take place due to it.
+        Finds a matching rule based upon this test and the
+        request and returns the rule if found else None.
         """
         raise NotImplementedError
 
+    def test(self, request):
+        """
+        This is the method that should be called from the
+        outside. It calls a sibling method to work out if
+        we have a rule hit, and if so returns the replacement
+        rules attached to it, else None.
+        """
+        rule = self.lookup_test(request)
+        return rule.replacements.all() if rule else None
+
 
 class HostnameTest(BaseTest):
+    """
+    This test uses the request.get_host() function
+    to do a simple lookup on the hostname with the 
+    relevant model to see if we get an exact match.
+    """
 
     requires_models = [HostnameTestModel]
+
+    def test(self, request):
+        hostname = request.get_host()
+        try:
+            return HostnameTestModel.objects.get(hostname__iexact=hostname)
+        except HostnameTestModel.DoesNotExist:
+            return None
 
 
 class QueryStringTest(BaseTest):
