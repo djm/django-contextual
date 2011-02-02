@@ -18,6 +18,7 @@ class BaseTest(object):
         within the Django eco-system. They only need to be 
         required if they would otherwise go uninstalled.
         """
+        self.config = kwargs
         for model in self.requires_models:
             models.register_models('contextual', model)
 

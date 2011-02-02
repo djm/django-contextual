@@ -12,12 +12,12 @@ setup(
                     'functionality. e.g Changing a phone number based upon the '
                     ' query string, hostname, referrer etc.',
         long_description=readme,
-        author='Darian Moodyu',
+        author='Darian Moody',
         author_email='mail@djm.org.uk',
         url='https://github.com/djm/django-contextual',
-        packages=find_packages(),
+        packages=find_packages(exclude=['tests']),
         include_package_data=True,
-        install_requires=[],
+        install_requires=['django'],
         classifiers=[
             'Environment :: Web Environment',
             'Intended Audience :: Developers',
@@ -25,4 +25,6 @@ setup(
             'Programming Language :: Python',
             'Framework :: Django',
             ],
-        )
+        tests_require = ['nose'],
+        test_suite = 'nose.collector',        
+)
