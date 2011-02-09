@@ -8,6 +8,6 @@ CONTEXTUAL_REPLACEMENT_TAGS = [r'[PHONE]', r'[ADDRESS]']
 # and an optional config dictionary to pass to the test.
 CONTEXTUAL_TESTS = (
         ('contextual.contextual_tests.HostnameTest', 1),
-        ('contextual.contextual_tests.QueryStringTest', 2, {}),
-        ('contextual.contextual_tests.RefererTest', 3, {}),
+       # ('contextual.contextual_tests.QueryStringTest', 2, {}),
+       # ('contextual.contextual_tests.RefererTest', 3, {}),
 )

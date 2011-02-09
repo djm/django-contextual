@@ -1,13 +1,11 @@
-from django.conf import settings
-from django.test import TestCase
-from django.test.client import Client
-
-from contextual.contextual_models import HostnameTestModel
-from contextual.contextual_tests import HostnameTest
-from contextual.models import *
-
-from django.test import Client
 from django.core.handlers.wsgi import WSGIRequest
+from django.test import TestCase
+from django.test import Client
+
+#from contextual.contextual_models import HostnameTestModel
+#from contextual.contextual_tests import HostnameTest
+#from contextual.models import *
+
 
 default_environ = {
     'PATH_INFO': '/',
@@ -37,6 +35,7 @@ class RequestFactory(Client):
         Similar to parent class, but returns the request object as 
         soon as it has created it.
         """
+        environ = default_environ
         environ.update(self.defaults)
         environ.update(request)
         return WSGIRequest(environ)
@@ -58,4 +57,4 @@ class HostnameRequestTest(BaseTestCase):
         super(HostnameRequestTest, self).setUp()
     
     def a_test():
-        pass
+        assert 1 == 1

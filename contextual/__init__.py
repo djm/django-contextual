@@ -1,8 +1,11 @@
+"""
+Handling instantiation of the tests on initialisation. This is necessary
+because the models required need to be registered with Django (for syncdb etc)
+"""
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from contextual.defaults import CONTEXTUAL_TESTS
 
-TESTS = getattr(settings, 'CONTEXTUAL_TESTS', CONTEXTUAL_TESTS)
+from contextual.defaults import CONTEXTUAL_TESTS
 
 def test_setting_to_instance(test_setting):
     """
@@ -28,6 +31,9 @@ def load_tests(tests):
     instances in the order that they need to be processed,
     as it is a case of first match wins.
 
+    By instantiating the classes, we run their __init__s
+    which register the required models with Django.
+
     Arguments: tests - An iterative of tuple triplets.
         e.g ('test.module.path', priority_as_int, config_dict)
     """
@@ -41,5 +47,7 @@ def load_tests(tests):
         instance = test_setting_to_instance(test)
         test_instances.append(instance)
     return test_instances
+
+TESTS = getattr(settings, 'CONTEXTUAL_TESTS', CONTEXTUAL_TESTS)
 
 LOADED_TESTS = load_tests(TESTS)

@@ -5,6 +5,7 @@ f = open(os.path.join(os.path.dirname(__file__), 'README'))
 readme = f.read()
 f.close()
 
+
 setup(
         name='django-contextual',
         version='0.1',
@@ -26,5 +27,4 @@ setup(
             'Framework :: Django',
             ],
         tests_require = ['nose'],
-        test_suite = 'nose.collector',        
 )

@@ -9,7 +9,8 @@ class BaseTest(object):
     contextual tests with related models.
     """
 
-    # Tests should define their own model(s).
+    # Tests should define their own model(s)
+    # for registration.
     requires_models = [] 
 
     def __init__(self, *args, **kwargs):
