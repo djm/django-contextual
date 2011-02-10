@@ -29,15 +29,28 @@ class HostnameTestModel(BaseTestModel):
     Allows rule matching against specific hostnames.
     """
     hostname = models.CharField(_("hostname"), max_length=255, 
-                help_text="Set to value of HTTP_HOST for positive match.",
+                help_text="Set to exact value of hostname for positive match.",
                 unique=True)
+
+    class Meta:
+        verbose_name = "hostname test"
+
+    def __unicode__(self):
+        return self.hostname
 
 
 class QueryStringTestModel(BaseTestModel):
     """
     Allows for rule matching based on query string.
     """
-    pass
+    value = models.CharField(_("value"), max_length=255,
+             help_text="Set to exact value. Key to check in defined in config." )
+
+    class Meta:
+        verbose_name = "querystring test"
+
+    def __unicode__(self):
+        return self.value
 
 class RefererTestModel(BaseTestModel):
     """
@@ -45,4 +58,6 @@ class RefererTestModel(BaseTestModel):
     """
     # Yes referrer is spelt wrong, to keep in line
     # with the incorrect spelling of the HTTP header.
-    pass
+
+    class Meta:
+        verbose_name = "referer based test"

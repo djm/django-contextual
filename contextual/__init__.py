@@ -2,10 +2,9 @@
 Handling instantiation of the tests on initialisation. This is necessary
 because the models required need to be registered with Django (for syncdb etc)
 """
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-from contextual.defaults import CONTEXTUAL_TESTS
+from contextual.defaults import TESTS
 
 def test_setting_to_instance(test_setting):
     """
@@ -47,7 +46,5 @@ def load_tests(tests):
         instance = test_setting_to_instance(test)
         test_instances.append(instance)
     return test_instances
-
-TESTS = getattr(settings, 'CONTEXTUAL_TESTS', CONTEXTUAL_TESTS)
 
 LOADED_TESTS = load_tests(TESTS)

@@ -1,3 +1,5 @@
+from django.contrib import admin
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 from contextual.contextual_models import HostnameTestModel, QueryStringTestModel, \
@@ -12,6 +14,7 @@ class BaseTest(object):
     # Tests should define their own model(s)
     # for registration.
     requires_models = [] 
+    requires_config_keys = {}
 
     def __init__(self, *args, **kwargs):
         """
@@ -21,8 +24,17 @@ class BaseTest(object):
         """
         self.config = kwargs
         for model in self.requires_models:
+            # Register with Django's model system.
             models.register_models('contextual', model)
-
+            # Register the models with Django's admin system.
+            admin.site.register(model)
+        # Now we test the passed in config dictionary had all
+        # the necessary for configuration keys.
+        for key, reason in self.requires_config_keys.iteritems():
+            if not key in self.config:
+                raise ImproperlyConfigured, \
+                        "%s requires the key \"%s\" in its config dictionary: %s" % \
+                            (self.__class__.__name__, key, reason)
     def _lookup_test(self, request):
         """ 
         Finds a matching rule based upon this test and the
@@ -53,15 +65,36 @@ class HostnameTest(BaseTest):
     def test(self, request):
         hostname = request.get_host()
         try:
-            return HostnameTestModel.objects.get(hostname__iexact=hostname)
+            match =  HostnameTestModel.objects.get(hostname__iexact=hostname)
         except HostnameTestModel.DoesNotExist:
-            return None
+            match =  None
+        return match
 
 
 class QueryStringTest(BaseTest):
+    """
+    This test uses a config dictonary during
+    instantiation to check a specific key
+    of a query string for a specific value.
+    If found, returns the match.
+    """
 
     requires_models = [QueryStringTestModel]
+    requires_config_keys = {
+                'get_key': "Used to select the GET key to do the lookup on.",
+            }
 
+    def test(self, request):
+        match = None
+        key = self.config.get('get_key')
+        # If that query string key has been set on the request.
+        value = request.GET.get(key)
+        if value:
+            try:
+                match = QueryStringTestModel.objects.get(value__iexact=value)
+            except QueryStringTestModel.DoesNotExist:
+                pass
+        return match
 
 class RefererTest(BaseTest):
 
