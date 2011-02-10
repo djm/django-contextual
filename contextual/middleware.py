@@ -42,6 +42,7 @@ class ContextualMiddleware(object):
         if hasattr(request, 'contextual_test') and 'html' in response['content-type']:
             replacements = request.contextual_test.replacements.all()
             for replacement in replacements:
+                # TODO: When do we use the defaults?
                 raw_bracketed_tag = r"\[%s\]" % replacement.tag
                 # Replace the given tags with the given data.
                 response.content = re.sub(raw_bracketed_tag, replacement.data,

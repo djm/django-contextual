@@ -36,7 +36,7 @@ class HostnameTestModel(BaseTestModel):
         verbose_name = "hostname test"
 
     def __unicode__(self):
-        return self.hostname
+        return u"Hostname Test: %s" % self.hostname
 
 
 class QueryStringTestModel(BaseTestModel):
@@ -50,7 +50,7 @@ class QueryStringTestModel(BaseTestModel):
         verbose_name = "querystring test"
 
     def __unicode__(self):
-        return self.value
+        return u"QueryString Test: %s" % self.value
 
 class RefererTestModel(BaseTestModel):
     """
@@ -61,3 +61,6 @@ class RefererTestModel(BaseTestModel):
 
     class Meta:
         verbose_name = "referer based test"
+
+    def __unicode__(self):
+        return u"Referer Test: "
