@@ -96,6 +96,7 @@ class QueryStringTest(BaseTest):
                 pass
         return match
 
+
 class RefererTest(BaseTest):
 
     requires_models = [RefererTestModel]

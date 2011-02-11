@@ -2,7 +2,11 @@
 import os
 import sys
 
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
+
+VERBOSITY = 2
+TEST_LABELS = ["tests"]
 
 if not settings.configured:
     settings.configure(
@@ -14,7 +18,6 @@ if not settings.configured:
         ]
     )
 
-from django.test.simple import run_tests as django_run_tests
 
 def run_tests():
     parent = os.path.join(
@@ -23,7 +26,13 @@ def run_tests():
         "..",
     )
     sys.path.insert(0, parent)
-    failures = django_run_tests(['tests'], verbosity=1, interactive=True)
+    if DJANGO_VERSION < (1, 2):
+        from django.test.simple import run_tests
+        failures = run_tests(TEST_LABELS, verbosity=VERBOSITY, interactive=True)
+    else:
+        from django.test.simple import DjangoTestSuiteRunner
+        runner = DjangoTestSuiteRunner(verbosity=VERBOSITY, interactive=True)
+        failures = runner.run_tests(TEST_LABELS)
     sys.exit(failures)
 
 if __name__ == '__main__':

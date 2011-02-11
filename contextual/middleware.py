@@ -3,7 +3,6 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from contextual import LOADED_TESTS
-from contextual.defaults import REPLACEMENT_TAGS
 
 class ContextualMiddleware(object):
     """
@@ -40,12 +39,11 @@ class ContextualMiddleware(object):
         # I think this is OK to deal with our text responses
         # but please to point out an edge case I've forgotten about.
         if hasattr(request, 'contextual_test') and 'html' in response['content-type']:
-            replacements = request.contextual_test.replacements.all()
+            replacements = request.contextual_test.replacements.filter(active=True)
             for replacement in replacements:
-                # TODO: When do we use the defaults?
-                raw_bracketed_tag = r"\[%s\]" % replacement.tag
+                raw_tag = replacement.tag.raw_tag
                 # Replace the given tags with the given data.
-                response.content = re.sub(raw_bracketed_tag, replacement.data,
+                response.content = re.sub(raw_tag, replacement.data,
                                           response.content.decode('utf-8'),
                                           re.UNICODE)
         return response

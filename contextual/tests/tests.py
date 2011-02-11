@@ -56,5 +56,5 @@ class HostnameRequestTest(BaseTestCase):
     def setUp(self):
         super(HostnameRequestTest, self).setUp()
     
-    def a_test():
+    def test_a_test(self):
         assert 1 == 1

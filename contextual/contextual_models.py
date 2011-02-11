@@ -13,7 +13,7 @@ class BaseTestModel(models.Model):
     and fields that should always be present.
     Subclass this if creating a new TestModel.
     """
-    replacements = models.ManyToManyField('contextual.Replacement',
+    replacements = models.ManyToManyField('contextual.ReplacementData',
                        help_text="If this test is chosen as a match, these "
                               "replacements will be applied.",
                        verbose_name=_("replacements"),
