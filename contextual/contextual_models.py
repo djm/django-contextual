@@ -58,9 +58,11 @@ class RefererTestModel(BaseTestModel):
     """
     # Yes referrer is spelt wrong, to keep in line
     # with the incorrect spelling of the HTTP header.
+    domain = models.CharField(_("referring domain"), max_length=255,
+              help_text="Set to domain of referring site. e.g. 'google.com' or 'google.' to match all.")
 
     class Meta:
         verbose_name = "referer based test"
 
     def __unicode__(self):
-        return u"Referer Test: "
+        return u"Referer Test: %s" % self.domain

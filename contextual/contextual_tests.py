@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from urlparse import urlparse
 
 from contextual.contextual_models import HostnameTestModel, QueryStringTestModel, \
                                          RefererTestModel
@@ -98,5 +99,20 @@ class QueryStringTest(BaseTest):
 
 
 class RefererTest(BaseTest):
+    """
+    This is a simple domain referer test, checks the
+    referer URL for a match without our models.
+    """
 
     requires_models = [RefererTestModel]
+
+    def test(self, request):
+        match = None
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            parsed_referer = urlparse(referer)
+            try:
+                match = RefererTestModel.objects.get(domain__icontains=parsed_referer.hostname)
+            except RefererTestModel.DoesNotExist:
+                pass
+        return match
