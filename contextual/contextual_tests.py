@@ -17,18 +17,23 @@ class BaseTest(object):
     requires_models = [] 
     requires_config_keys = {}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config=None):
         """
         Makes sure the models required by the test are registed
         within the Django eco-system. They only need to be 
         required if they would otherwise go uninstalled.
         """
-        self.config = kwargs
+        self.config = config
         for model in self.requires_models:
             # Register with Django's model system.
             models.register_models('contextual', model)
-            # Register the models with Django's admin system.
-            admin.site.register(model)
+            try:
+                # Register the models with Django's admin system.
+                # Testing raises AlreadyRegistered as I guess the 
+                # class is instantiated twice. Let me know a better way.
+                admin.site.register(model)
+            except admin.sites.AlreadyRegistered:
+                pass
         # Now we test the passed in config dictionary had all
         # the necessary for configuration keys.
         for key, reason in self.requires_config_keys.iteritems():
@@ -116,3 +121,12 @@ class RefererTest(BaseTest):
             except RefererTestModel.DoesNotExist:
                 pass
         return match
+
+
+class SearchRefererTest(BaseTest):
+    """
+    This test class checks 
+    """
+
+    def test(self, request):
+        pass

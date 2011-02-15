@@ -20,7 +20,7 @@ def test_setting_to_instance(test_setting):
     if len(test_setting) < 3:
         instance = klass()
     else:
-        instance = klass(**test_setting[2]) 
+        instance = klass(config=test_setting[2]) 
     return instance
 
 def load_tests(tests):
