@@ -26,7 +26,7 @@ class BaseTest(object):
         within the Django eco-system. They only need to be 
         required if they would otherwise go uninstalled.
         """
-        self.config = config
+        self.config = config if config else {}
         for model in self.requires_models:
             # Register with Django's model system.
             models.register_models('contextual', model)
@@ -44,12 +44,6 @@ class BaseTest(object):
                 raise ImproperlyConfigured, \
                     "%s requires the key \"%s\" in its config dictionary: %s" % \
                             (self.__class__.__name__, key, reason)
-    def _lookup_test(self, request):
-        """ 
-        Finds a matching rule based upon this test and the
-        request and returns the rule if found else None.
-        """
-        raise NotImplementedError
 
     def test(self, request):
         """
@@ -140,12 +134,12 @@ class BrandedSearchRefererTest(BaseTest):
         'brand_terms': "A list of regex strings classed as 'brand terms'.",
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config=None):
         """
         Override the init so we can precompile the brand term 
         regex's on instantiation and therefore only do that once.
         """
-        super(BrandedSearchRefererTest, self).__init__(*args, **kwargs)
+        super(BrandedSearchRefererTest, self).__init__(config=config)
         self.compiled_brand_terms = []
         for term in self.config['brand_terms']:
             compiled = re.compile(term, re.IGNORECASE|re.UNICODE)

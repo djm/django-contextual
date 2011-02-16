@@ -15,6 +15,10 @@ class ContextualMiddleware(object):
     """
 
     def is_excludable(self, request):
+        """
+        Returns True if the request should be excluded
+        from any contextual lookup or replacements.
+        """
         # For those serving media via django for development purposes;
         # this stops us from processing the media requests. Also 
         # stops it from working for admin requests. We also
@@ -25,6 +29,15 @@ class ContextualMiddleware(object):
             request.path.startswith(settings.MEDIA_URL),
             request.path.startswith(reverse('admin:index'))
         ])
+
+    def is_overrideable(self, request):
+        """
+        Returns True if the request should be the decider
+        for any match *despite* there already being a test
+        match on the session.
+        """
+        # TODO: Implement this functionality.
+        return False
 
     def process_request(self, request):
         """
@@ -41,8 +54,10 @@ class ContextualMiddleware(object):
         # we check to see if we ALREADY have a match on the session.
         # We recommend the use of the cache backend for the session
         # to save on those precious DB queries (we don't care about
-        # persistence however, you may).
-        if SESSION_KEY in request.session:
+        # serious persistence however, you may). If we have a match
+        # we also check whether the incoming request *should* override
+        # the stored match. This relies on the test classes themselves.
+        if SESSION_KEY in request.session and not self.is_overrideable(request):
             # We found a match, load on to the request and dump out.
             request.contextual_test = request.session.get(SESSION_KEY)
             return None

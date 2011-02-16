@@ -7,6 +7,7 @@ from django.conf import settings
 # Tuple triplets defining modules to load, their matching priority 
 # and an optional config dictionary to pass to the test.
 DEFAULT_TESTS = (
+        ('contextual.contextual_tests.BrandedSearchRefererTest', {'brand_terms': []}),
         ('contextual.contextual_tests.RefererTest', 1),
         ('contextual.contextual_tests.QueryStringTest', 2, {'get_key': 's'}),
         ('contextual.contextual_tests.HostnameTest', 3),
