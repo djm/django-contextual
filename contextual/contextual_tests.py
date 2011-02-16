@@ -1,10 +1,13 @@
+import re
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.http import QueryDict
 from urlparse import urlparse
 
-from contextual.contextual_models import HostnameTestModel, QueryStringTestModel, \
-                                         RefererTestModel
+from contextual.defaults import SEARCH_ENGINES
+from contextual.contextual_models import (HostnameTestModel, QueryStringTestModel,
+                                   RefererTestModel, BrandedSearchRefererTestModel)
 
 class BaseTest(object):
     """
@@ -39,7 +42,7 @@ class BaseTest(object):
         for key, reason in self.requires_config_keys.iteritems():
             if not key in self.config:
                 raise ImproperlyConfigured, \
-                        "%s requires the key \"%s\" in its config dictionary: %s" % \
+                    "%s requires the key \"%s\" in its config dictionary: %s" % \
                             (self.__class__.__name__, key, reason)
     def _lookup_test(self, request):
         """ 
@@ -117,16 +120,70 @@ class RefererTest(BaseTest):
         if referer:
             parsed_referer = urlparse(referer)
             try:
-                match = RefererTestModel.objects.get(domain__icontains=parsed_referer.hostname)
+                match = RefererTestModel.objects.get(
+                        domain__icontains=parsed_referer.hostname)
             except RefererTestModel.DoesNotExist:
                 pass
         return match
 
 
-class SearchRefererTest(BaseTest):
+class BrandedSearchRefererTest(BaseTest):
     """
-    This test class checks 
+    This test class checks whether the referer was a search
+    engine and if so checks the query to see if it contains
+    any of the "branded" terms specified in the instantiation
+    config dictionary.
     """
 
+    requires_models = [BrandedSearchRefererTestModel]
+    requires_config_keys = {
+        'brand_terms': "A list of regex strings classed as 'brand terms'.",
+    }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Override the init so we can precompile the brand term 
+        regex's on instantiation and therefore only do that once.
+        """
+        super(BrandedSearchRefererTest, self).__init__(*args, **kwargs)
+        self.compiled_brand_terms = []
+        for term in self.config['brand_terms']:
+            compiled = re.compile(term, re.IGNORECASE|re.UNICODE)
+            self.compiled_brand_terms.append(compiled)
+
     def test(self, request):
-        pass
+        match = None
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            url = urlparse(referer)
+            for engine, lookup_key in SEARCH_ENGINES.iteritems():
+                if engine in url.hostname:
+                    query_string = QueryDict(url.query)
+                    query = query_string.get(lookup_key)
+                    match = self.get_match(engine, query)
+                    break
+        return match
+
+    def get_match(self, search_engine, query):
+        """
+        Returns a test match using the search engine
+        and search term used. 
+        """
+        branded = self.is_branded(query)
+        try:
+            return BrandedSearchRefererTestModel.objects.get(
+                    search_engine=search_engine,
+                    branded=branded)
+        except BrandedSearchRefererTestModel.DoesNotExist:
+            return None
+             
+    def is_branded(self, query):
+        """
+        Returns True if any of the words within
+        the query are branded terms as defined
+        by the config dictionary.
+        """
+        for term in self.compiled_brand_terms:
+            if term.match(query):
+                return True
+        return False

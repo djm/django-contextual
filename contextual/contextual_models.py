@@ -44,7 +44,7 @@ class QueryStringTestModel(BaseTestModel):
     Allows for rule matching based on query string.
     """
     value = models.CharField(_("value"), max_length=255,
-             help_text="Set to exact value. Key to check in defined in config." )
+             help_text="Set to exact value. Key to check in defined in config.")
 
     class Meta:
         verbose_name = "querystring test"
@@ -66,3 +66,24 @@ class RefererTestModel(BaseTestModel):
 
     def __unicode__(self):
         return u"Referer Test: %s" % self.domain
+
+class BrandedSearchRefererTestModel(BaseTestModel):
+    """
+    Allows for
+    """
+    from contextual.defaults import SEARCH_ENGINES
+    SEARCH_ENGINE_CHOICES = tuple(
+                [(key, key.title()) for key in SEARCH_ENGINES.iterkeys()]
+            )
+    search_engine = models.CharField(_("search engine"), max_length=20,
+            choices=SEARCH_ENGINE_CHOICES, help_text="The search engine to match for.")
+    branded = models.BooleanField(_("branded?"),
+            help_text="If branded, will only match when search term contained branded words.")
+
+    class Meta:
+        verbose_name = "branded search referer test"
+
+    def __unicode__(self):
+        return u"Search referer: %s %s" % (
+                self.search_engine.title(),
+                "Branded" if self.branded else "Unbranded")
