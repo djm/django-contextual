@@ -5,7 +5,7 @@ import sys
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 
-VERBOSITY = 2
+VERBOSITY = 1
 TEST_LABELS = ["tests"]
 
 if not settings.configured:

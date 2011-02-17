@@ -69,7 +69,8 @@ class RefererTestModel(BaseTestModel):
 
 class BrandedSearchRefererTestModel(BaseTestModel):
     """
-    Allows for
+    Allows for matching of requests from incoming search
+    engines; splits up branded and unbranded search queries.
     """
     from contextual.defaults import SEARCH_ENGINES
     SEARCH_ENGINE_CHOICES = tuple(

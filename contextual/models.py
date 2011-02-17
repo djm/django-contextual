@@ -24,7 +24,7 @@ class ReplacementData(models.Model):
         verbose_name_plural = "replacement data"
 
     def __unicode__(self):
-        return "%s -> %s" % (self.tag, self.data)
+        return "%s: %s" % (self.tag, self.name)
 
 
 class ReplacementTag(models.Model):
