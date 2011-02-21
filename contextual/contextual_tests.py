@@ -6,8 +6,8 @@ from django.http import QueryDict
 from urlparse import urlparse
 
 from contextual.defaults import SEARCH_ENGINES
-from contextual.contextual_models import (HostnameTestModel, QueryStringTestModel,
-                                   RefererTestModel, BrandedSearchRefererTestModel)
+from contextual.contextual_models import (HostnameTestModel, PathTestModel, 
+        QueryStringTestModel, RefererTestModel, BrandedSearchRefererTestModel)
 
 class BaseTest(object):
     """
@@ -71,6 +71,23 @@ class HostnameTest(BaseTest):
             match =  HostnameTestModel.objects.get(hostname__iexact=hostname)
         except HostnameTestModel.DoesNotExist:
             match =  None
+        return match
+
+
+class PathTest(BaseTest):
+    """
+    This test uses the request.path lookup to test
+    for path based matches in the database. Path based
+    test would most usually take highest priority.
+    """
+
+    requires_models = [PathTestModel]
+
+    def test(self, request):
+        try:
+            match = PathTestModel.objects.get(path__iexact=request.path)
+        except PathTestModel.DoesNotExist:
+            match = None
         return match
 
 

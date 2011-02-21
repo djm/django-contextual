@@ -3,9 +3,10 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.test import TestCase
 from django.test import Client
 
-from contextual.contextual_models import (HostnameTestModel, QueryStringTestModel,
-                                        RefererTestModel)
-from contextual.contextual_tests import HostnameTest, QueryStringTest, RefererTest
+from contextual.contextual_models import (HostnameTestModel, PathTestModel, 
+        QueryStringTestModel, RefererTestModel, BrandedSearchRefererTestModel)
+from contextual.contextual_tests import (HostnameTest, PathTest, QueryStringTest, 
+        RefererTest, BrandedSearchRefererTest)
 from contextual.models import ReplacementData, ReplacementTag
 
 default_environ = {
@@ -127,6 +128,38 @@ class HostnameRequestTest(BaseTestCase):
         match = self.test.test(request)
         assert match == self.hostname_test3
 
+class PathRequestTest(BaseTestCase):
+
+    def setUp(self):
+        """
+        Create a couple of path based tests.
+        """
+        super(PathRequestTest, self).setUp()
+        self.path_test1 = PathTestModel.objects.create(path='/')
+        self.path_test2 = PathTestModel.objects.create(path='/parent/')
+        self.path_test3 = PathTestModel.objects.create(path='/parent/child/')
+        self.test = PathTest()
+
+    def test_match_root(self):
+        request = self.req_factory.request(default_environ)
+        match = self.test.test(request)
+        assert match == self.path_test1
+
+    def test_match_exact_path(self):
+        environ = {}
+        environ.update(default_environ)
+        environ['PATH_INFO'] = '/parent/'
+        request = self.req_factory.request(environ)
+        match = self.test.test(request)
+        assert match == self.path_test2
+
+    def test_match_doesnt_hit_child(self):
+        environ = {}
+        environ.update(default_environ)
+        environ['PATH_INFO'] = '/parent/child'
+        request = self.req_factory.request(environ)
+        match = self.test.test(request)
+        assert match is None
 
 class QueryStringRequestTest(BaseTestCase):
 
@@ -206,3 +239,24 @@ class QueryStringRequestTest(BaseTestCase):
         test = QueryStringTest(config)
         match = test.test(request)
         assert match == self.querystring_test1
+
+class RefererRequestTest(BaseTestCase):
+
+    def setUp(self):
+        """
+        Create some referer tests.
+        #TODO
+        """
+        super(RefererRequestTest, self).setUp()
+
+class BrandedSearchRefererRequestTest(BaseTestCase):
+
+    def setUp(self):
+        """
+        Create a couple of branded search referer tests.
+        #TODO
+        """
+        super(BrandedSearchRefererRequestTest, self).setUp()
+        self.search_test1 = None
+        self.search_test2 = None
+        self.search_test3 = None

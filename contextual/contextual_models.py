@@ -38,13 +38,22 @@ class HostnameTestModel(BaseTestModel):
     def __unicode__(self):
         return u"Hostname Test: %s" % self.hostname
 
+class PathTestModel(BaseTestModel):
+    """
+    Allows rule matching against specific URL paths (absolute).
+    """
+    path = models.CharField(_("request path"), max_length=255,
+            help_text="Set to exact value of path for positive match.",
+            unique=True)
+
 
 class QueryStringTestModel(BaseTestModel):
     """
     Allows for rule matching based on query string.
     """
     value = models.CharField(_("value"), max_length=255,
-             help_text="Set to exact value. Key to check in defined in config.")
+             help_text="Set to exact value. Key to check in defined in config.",
+             unique=True)
 
     class Meta:
         verbose_name = "querystring test"
@@ -59,7 +68,8 @@ class RefererTestModel(BaseTestModel):
     # Yes referrer is spelt wrong, to keep in line
     # with the incorrect spelling of the HTTP header.
     domain = models.CharField(_("referring domain"), max_length=255,
-              help_text="Set to domain of referring site. e.g. 'google.com' or 'google.' to match all.")
+              help_text="Set to domain of referring site. e.g. 'google.com' or 'google.' to match all.",
+              unique=True)
 
     class Meta:
         verbose_name = "referer based test"
@@ -82,6 +92,7 @@ class BrandedSearchRefererTestModel(BaseTestModel):
             help_text="If branded, will only match when search term contained branded words.")
 
     class Meta:
+        unique_together = ('search_engine', 'branded')
         verbose_name = "branded search referer test"
 
     def __unicode__(self):
