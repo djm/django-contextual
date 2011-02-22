@@ -2,6 +2,7 @@ import re
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.db.models import F
 from django.http import QueryDict
 from urlparse import urlparse
 
@@ -120,7 +121,8 @@ class QueryStringTest(BaseTest):
 class RefererTest(BaseTest):
     """
     This is a simple domain referer test, checks the
-    referer URL for a match without our models.
+    referer URL for a match. Can handle either
+    exact matching or fall back
     """
 
     requires_models = [RefererTestModel]
@@ -132,7 +134,7 @@ class RefererTest(BaseTest):
             parsed_referer = urlparse(referer)
             try:
                 match = RefererTestModel.objects.get(
-                        domain__icontains=parsed_referer.hostname)
+                            domain__iexact=parsed_referer.hostname)
             except RefererTestModel.DoesNotExist:
                 pass
         return match
@@ -169,8 +171,17 @@ class BrandedSearchRefererTest(BaseTest):
             url = urlparse(referer)
             for engine, lookup_key in SEARCH_ENGINES.iteritems():
                 if engine in url.hostname:
-                    query_string = QueryDict(url.query)
-                    query = query_string.get(lookup_key)
+                    # Now that Google has launched Google Instant with its 
+                    # hashbang, twitter-style, break-the-web, fragment crap we
+                    # have to check whether this exists. If there is no fragment
+                    # we use the normal query string. Thankfully Google just
+                    # uses a normal query string style fragment.
+                    if url.fragment:
+                        query = QueryDict(url.fragment)
+                    else:
+                        query = QueryDict(url.query)
+                    query = query.get(lookup_key)
+                    print engine, query
                     match = self.get_match(engine, query)
                     break
         return match
@@ -194,7 +205,8 @@ class BrandedSearchRefererTest(BaseTest):
         the query are branded terms as defined
         by the config dictionary.
         """
-        for term in self.compiled_brand_terms:
-            if term.match(query):
-                return True
+        if query:
+            for term in self.compiled_brand_terms:
+                if term.findall(query):
+                    return True
         return False

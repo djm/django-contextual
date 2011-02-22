@@ -7,6 +7,7 @@ from contextual.contextual_models import (HostnameTestModel, PathTestModel,
         QueryStringTestModel, RefererTestModel, BrandedSearchRefererTestModel)
 from contextual.contextual_tests import (HostnameTest, PathTest, QueryStringTest, 
         RefererTest, BrandedSearchRefererTest)
+from contextual.defaults import DEFAULT_SEARCH_ENGINES
 from contextual.models import ReplacementData, ReplacementTag
 
 default_environ = {
@@ -26,12 +27,14 @@ class RequestFactory(Client):
     Adapted from simonw's http://djangosnippets.org/snippets/963/
     """
 
-    def request(self, environ=default_environ, **request):
+    def request(self, **request):
         """
         Similar to parent class, but returns the request object as 
         soon as it has created it.
         """
+        environ = {}
         environ.update(self.defaults)
+        environ.update(default_environ)
         environ.update(request)
         return WSGIRequest(environ)
 
@@ -110,10 +113,7 @@ class HostnameRequestTest(BaseTestCase):
         Create a request with a HTTP_HOST we shouldn't
         have a match for, test we return None.
         """
-        environ = {}
-        environ.update(default_environ)
-        environ['HTTP_HOST'] = "www.cantfindme.com"
-        request = self.req_factory.request(environ)
+        request = self.req_factory.request(HTTP_HOST="www.cantfindme.com")
         match = self.test.test(request)
         assert match is None
 
@@ -121,10 +121,7 @@ class HostnameRequestTest(BaseTestCase):
         """
         Test the match returns for our port based hostname.
         """
-        environ = {}
-        environ.update(default_environ)
-        environ['HTTP_HOST'] = "127.0.0.1:8000"
-        request = self.req_factory.request(environ)
+        request = self.req_factory.request(HTTP_HOST="127.0.0.1:8000")
         match = self.test.test(request)
         assert match == self.hostname_test3
 
@@ -141,23 +138,17 @@ class PathRequestTest(BaseTestCase):
         self.test = PathTest()
 
     def test_match_root(self):
-        request = self.req_factory.request(default_environ)
+        request = self.req_factory.request()
         match = self.test.test(request)
         assert match == self.path_test1
 
     def test_match_exact_path(self):
-        environ = {}
-        environ.update(default_environ)
-        environ['PATH_INFO'] = '/parent/'
-        request = self.req_factory.request(environ)
+        request = self.req_factory.request(PATH_INFO='/parent/')
         match = self.test.test(request)
         assert match == self.path_test2
 
     def test_match_doesnt_hit_child(self):
-        environ = {}
-        environ.update(default_environ)
-        environ['PATH_INFO'] = '/parent/child'
-        request = self.req_factory.request(environ)
+        request = self.req_factory.request(PATH_INFO='/parent/child')
         match = self.test.test(request)
         assert match is None
 
@@ -180,10 +171,8 @@ class QueryStringRequestTest(BaseTestCase):
         is the one we're meant to check (specified in the config
         dictionary), this will return the appropriate test match.
         """
-        environ = {}
-        environ.update(default_environ)
-        environ['QUERY_STRING'] = "s=google-phone&something=234"
-        request = self.req_factory.request(environ)
+        query = "s=google-phone&something=234"
+        request = self.req_factory.request(QUERY_STRING=query)
         config = {'get_key': 's'}
         test = QueryStringTest(config)
         match = test.test(request)
@@ -207,10 +196,8 @@ class QueryStringRequestTest(BaseTestCase):
         """
         Fail on slug lookup.
         """
-        environ = {}
-        environ.update(default_environ)
-        environ['QUERY_STRING'] = "s=google-phone2"
-        request = self.req_factory.request(environ)
+        query = "s=google-phone2"
+        request = self.req_factory.request(QUERY_STRING=query)
         # Correct config, we're testing failed
         # slug lookup not the key here.
         config = {'get_key': 's'}
@@ -225,10 +212,8 @@ class QueryStringRequestTest(BaseTestCase):
         to make sure it passes with the correct get_key
         value.
         """
-        environ = {}
-        environ.update(default_environ)
-        environ['QUERY_STRING'] = "correct=google-phone"
-        request = self.req_factory.request(environ)
+        query = "correct=google-phone"
+        request = self.req_factory.request(QUERY_STRING=query)
         # Deliberately non-matching config dict
         config = {'get_key': 'incorrect'}
         test = QueryStringTest(config)
@@ -245,18 +230,149 @@ class RefererRequestTest(BaseTestCase):
     def setUp(self):
         """
         Create some referer tests.
-        #TODO
         """
         super(RefererRequestTest, self).setUp()
+        self.referer_test1 = RefererTestModel.objects.create(domain="www.google.com")
+        self.referer_test2 = RefererTestModel.objects.create(domain="google.com")
+        self.test = RefererTest()
+
+    def test_simple_lookup(self):
+        referer_url = "http://www.google.com/search?sclient=psy&hl=en&site=&source=hp&q=test&aq=f&aqi=&aql=&oq=&pbx=1&cad=cbv"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match == self.referer_test1
+
+    def test_lookup_fail(self):
+        referer_url = "http://www.google.fr/search?sclient=psy&hl=en&site=&source=hp&q=test&aq=f&aqi=&aql=&oq=&pbx=1&cad=cbv"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match is None
+
+    def test_non_subdomain_match(self):
+        referer_url = "http://google.com/search?sclient=psy&hl=en&site=&source=hp&q=test&aq=f&aqi=&aql=&oq=&pbx=1&cad=cbv"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match == self.referer_test2
 
 class BrandedSearchRefererRequestTest(BaseTestCase):
+    """
+    This test is designed to work with the DEFAULT_SEARCH_ENGINES
+    """
 
     def setUp(self):
         """
         Create a couple of branded search referer tests.
-        #TODO
         """
         super(BrandedSearchRefererRequestTest, self).setUp()
-        self.search_test1 = None
-        self.search_test2 = None
-        self.search_test3 = None
+        for key in DEFAULT_SEARCH_ENGINES.iterkeys():
+            BrandedSearchRefererTestModel.objects.create(search_engine=key, branded=False)
+            BrandedSearchRefererTestModel.objects.create(search_engine=key, branded=True)
+        self.brand_terms = ["brand", "branded", "branded.co.uk"]
+        config = {'brand_terms': self.brand_terms}
+        self.test = BrandedSearchRefererTest(config)
+
+    def test_no_then_incorrect_then_correct_config_dict(self):
+        try:
+            test = BrandedSearchRefererTest()
+        except ImproperlyConfigured:
+            pass
+        else:
+            assert False, "No config dictionary supplied and yet no error!"
+        config = {'brands': ["branded"]}
+        try:
+            test = BrandedSearchRefererTest(config)
+        except ImproperlyConfigured:
+            pass
+        else:
+            assert False, "Incorrect key in config dictionary and yet no error!"
+        config = {'brand_terms': ["branded"]}
+        try:
+            test = BrandedSearchRefererTest(config)
+        except ImproperlyConfigured:
+            assert False, "Correct key in config dictionary but we're getting an error."
+
+    def test_no_query_string(self):
+        referer_url = "http://www.google.co.uk/"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'google'
+        # With no query string, we should always be unbranded.
+        assert match.branded == False
+
+    """
+    Branded counts as search terms which include the branded terms we set in setUp.
+    Unbranded is any other search term which does not contain those terms.
+    """
+
+    def test_ask_branded(self):
+        # Branded as it has the word "branded" in the query..
+        referer_url = "http://uk.ask.com/web?q=branded+test&search=&qsrc=0&o=312&l=dir"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'ask'
+        assert match.branded == True
+
+    def test_ask_unbranded(self):
+        referer_url = "http://uk.ask.com/web?q=random+test&search=&qsrc=0&o=312&l=dir"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'ask'
+        assert match.branded == False
+
+    def test_bing_branded(self):
+        referer_url = "http://www.bing.com/search?q=branded.co.uk+test+term&go=&form=QBRE&filt=all&qs=n&sk="
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'bing'
+        assert match.branded == True
+
+    def test_bing_unbranded(self):
+        referer_url = "http://www.bing.com/search?q=random+test+term&go=&form=QBRE&filt=all&qs=n&sk="
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'bing'
+        assert match.branded == False
+
+    def test_google_instant_branded(self):
+        referer_url = "http://www.google.com/#sclient=psy&hl=en&q=branded.co.uk+test+term&aq=f&aqi=&aql=&oq=&pbx=1&fp=31bd50ee20ddd9f2"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'google'
+        assert match.branded == True
+
+    def test_google_instant_unbranded(self):
+        referer_url = "http://www.google.com/#sclient=psy&hl=en&q=term+search+random&aq=f&aqi=&aql=&oq=&pbx=1&fp=31bd50ee20ddd9f2"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'google'
+        assert match.branded == False
+
+    def test_google_normal_branded(self):
+
+        referer_url = "http://www.google.com/search?hl=en&source=hp&biw=1680&bih=860&q=search+test+branded&aq=f&aqi=&aql=&oq="
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'google'
+        assert match.branded == True
+
+    def test_google_normal_unbranded(self):
+        referer_url = "http://www.google.com/search?hl=en&biw=1680&bih=860&q=search+test+random&aq=f&aqi=&aql=&oq="
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'google'
+        assert match.branded == False
+
+        assert match.branded == False
+    def test_yahoo_branded(self):
+        referer_url = "http://uk.search.yahoo.com/search;_ylt=Anai_uHQTTS4fYw9WKSHXNk4hJp4?vc=&p=brand+search+term&toggle=1&cop=mss&ei=UTF-8&fr=yfp-t-702"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'yahoo'
+        assert match.branded == True
+
+    def test_yahoo_unbranded(self):
+        referer_url = "http://uk.search.yahoo.com/search;_ylt=Anai_uHQTTS4fYw9WKSHXNk4hJp4?vc=&p=random+search+term&toggle=1&cop=mss&ei=UTF-8&fr=yfp-t-702"
+        request = self.req_factory.request(HTTP_REFERER=referer_url)
+        match = self.test.test(request)
+        assert match.search_engine == 'yahoo'
+        assert match.branded == False
