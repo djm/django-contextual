@@ -2,7 +2,6 @@ import re
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.db.models import F
 from django.http import QueryDict
 from urlparse import urlparse
 

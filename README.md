@@ -76,7 +76,7 @@ you like inside your test class as long as it abides by the set interface.
 
 To show an example, we'll take the hostname test:
 
-``
+`
 class PathTest(BaseTest):
     """
     This test uses the request.path lookup to test
@@ -92,7 +92,7 @@ class PathTest(BaseTest):
         except PathTestModel.DoesNotExist:
             match = None
         return match
-``
+`
 
 As you can see, tests must subclass `contextual.contextual_tests.BaseTest`. After
 this, the only requirement on the class is to have a method called `tests` which
