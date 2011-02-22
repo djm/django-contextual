@@ -52,11 +52,80 @@ feel free to disagree though.
 
 ##Using the In-built Contextual Tests
 
-Docs coming shortly.
+Coming shortly..for now, check out `contextual/contextual_tests.py`.
+The tests below are currently available (and fully unit tested):
+
+###HostnameTest
+
+###PathTest
+
+###QueryStringTest
+
+###RefererTest
+
+###BrandedSearchRefererTest
 
 ##Writing your own Contextual Tests
 
-Docs coming soon.. see `contextual/contextual_tests.py`. They are fairly simple.
+Refer to `contextual/contextual_tests.py` to see how the built-ins do it.
+
+Your own tests may live anywhere on your Python path; you are fairly free to do what
+you like inside your test class as long as it abides by the set interface.
+
+###Example
+
+To show an example, we'll take the hostname test:
+
+``
+class PathTest(BaseTest):
+    """
+    This test uses the request.path lookup to test
+    for path based matches in the database. Path based
+    test would most usually take highest priority.
+    """
+
+    requires_models = [PathTestModel]
+
+    def test(self, request):
+        try:
+            match = PathTestModel.objects.get(path__iexact=request.path)
+        except PathTestModel.DoesNotExist:
+            match = None
+        return match
+``
+
+As you can see, tests must subclass `contextual.contextual_tests.BaseTest`. After
+this, the only requirement on the class is to have a method called `tests` which
+accepts a standard Django WSGI `request` instance. The method must then either
+find a match or return None based upon the information available on the request.
+
+There are two other class attributes which are both empty by default: `requires_models`
+and `requires_config_keys`.
+
+###requires_models
+
+This is an optional list of models the test class requires access to; any models imported
+and placed in this list (non-instantiated) will be registered with Django's
+internal model system (and therefore by picked up by the `syncdb` command) and also
+Django's contrib admin system.
+
+The models should subclass the abstract `contextual.contextual_models.BaseTestModel`
+so that they receive the necessary functionality and should represent a unique
+"match" for whatever test it is you're trying to carry out. You're best bet is to 
+look at the current models for the in-built tests and see how they carry this out; 
+they're fairly simple.
+
+###requires_config_keys
+
+This is an optional dictionary which defines the **required** keys for the 
+configuration dictionary set up in your project settings. The key's of this dictionary
+are the keys the test class expects in the config and the values are a simple
+string explaining what they should be set to and why they are required. Any keys
+provided here will be tested for existence in the config dictionary during
+instantiation and the test class will raise an ImproperlyConfigured exception
+if it does not find them.
+
+To see an example of this in use see `contextual.contextual_tests.QueryStringTest`. 
 
 ##Contributing (Forking)
 
