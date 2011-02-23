@@ -180,7 +180,6 @@ class BrandedSearchRefererTest(BaseTest):
                     else:
                         query = QueryDict(url.query)
                     query = query.get(lookup_key)
-                    print engine, query
                     match = self.get_match(engine, query)
                     break
         return match
