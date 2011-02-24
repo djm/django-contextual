@@ -39,7 +39,7 @@ class ContextualMiddleware(object):
         # TODO: Implement this functionality.
         return False
 
-    def process_request(self, request):
+    def process_view(self, request, view_func, view_args, view_kwargs):
         """
         Carry out the processing of the incoming request to 
         calculate which, if any, replacements we need to apply
