@@ -21,6 +21,7 @@ class ReplacementData(models.Model):
 
     class Meta:
         ordering = ["name"]
+        unique_together = ('tag', 'data')
         verbose_name_plural = "replacement data"
 
     def __unicode__(self):
@@ -34,7 +35,7 @@ class ReplacementTag(models.Model):
     settings so we can provide defaults for the replacement
     tags in a sensible fashion.
     """
-    tag = models.CharField(_("replacement tag"), max_length=20,
+    tag = models.CharField(_("replacement tag"), max_length=20, unique=True,
                   help_text=_("e.g PHONE will be made available as [PHONE]"))
     default = models.CharField(_("default replacement"), max_length=255)
 
