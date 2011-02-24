@@ -18,7 +18,6 @@ setup(
         url='https://github.com/djm/django-contextual',
         packages=find_packages(exclude=['tests']),
         include_package_data=True,
-        install_requires=['django'],
         classifiers=[
             'Environment :: Web Environment',
             'Intended Audience :: Developers',
