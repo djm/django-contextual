@@ -291,7 +291,23 @@ class BrandedSearchRefererRequestTest(BaseTestCase):
         except ImproperlyConfigured:
             assert False, "Correct key in config dictionary but we're getting an error."
 
-    def test_no_query_string(self):
+    def test_no_referer(self):
+        """
+        Test that no referer returns No match and doesn't 500.
+        """
+        request = self.req_factory.request(HTTP_REFERER="")
+        match = self.test.test(request)
+        assert match is None
+
+    def test_partial_referer(self):
+        """
+        Test that a partial referer returns no match and doesn't 500.
+        """
+        request = self.req_factory.request(HTTP_REFERER="http://")
+        match = self.test.test(request)
+        assert match is None
+
+    def test_no_query_string_on_referer(self):
         referer_url = "http://www.google.co.uk/"
         request = self.req_factory.request(HTTP_REFERER=referer_url)
         match = self.test.test(request)
@@ -363,6 +379,7 @@ class BrandedSearchRefererRequestTest(BaseTestCase):
         assert match.branded == False
 
         assert match.branded == False
+
     def test_yahoo_branded(self):
         referer_url = "http://uk.search.yahoo.com/search;_ylt=Anai_uHQTTS4fYw9WKSHXNk4hJp4?vc=&p=brand+search+term&toggle=1&cop=mss&ei=UTF-8&fr=yfp-t-702"
         request = self.req_factory.request(HTTP_REFERER=referer_url)

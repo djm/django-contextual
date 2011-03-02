@@ -167,21 +167,24 @@ class BrandedSearchRefererTest(BaseTest):
         match = None
         referer = request.META.get('HTTP_REFERER')
         if referer:
+            # Parse the referer URL and check we can
+            # actually extract a hostname from it.
             url = urlparse(referer)
-            for engine, lookup_key in SEARCH_ENGINES.iteritems():
-                if engine in url.hostname:
-                    # Now that Google has launched Google Instant with its 
-                    # hashbang, twitter-style, break-the-web, fragment crap we
-                    # have to check whether this exists. If there is no fragment
-                    # we use the normal query string. Thankfully Google just
-                    # uses a normal query string style fragment.
-                    if url.fragment:
-                        query = QueryDict(url.fragment)
-                    else:
-                        query = QueryDict(url.query)
-                    query = query.get(lookup_key)
-                    match = self.get_match(engine, query)
-                    break
+            if url.hostname:
+                for engine, lookup_key in SEARCH_ENGINES.iteritems():
+                    if engine in url.hostname:
+                        # Now that Google has launched Google Instant with its 
+                        # hashbang, twitter-style, break-the-web, fragment crap we
+                        # have to check whether this exists. If there is no fragment
+                        # we use the normal query string. Thankfully Google just
+                        # uses a normal query string style fragment.
+                        if url.fragment:
+                            query = QueryDict(url.fragment)
+                        else:
+                            query = QueryDict(url.query)
+                        query = query.get(lookup_key)
+                        match = self.get_match(engine, query)
+                        break
         return match
 
     def get_match(self, search_engine, query):
