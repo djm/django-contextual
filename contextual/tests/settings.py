@@ -12,5 +12,6 @@ else:
     DATABASE_NAME = ':memory:'
 
 INSTALLED_APPS = (
+    'contextual',
     'contextual.tests',
 )

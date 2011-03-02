@@ -8,6 +8,10 @@ from django.conf import settings
 VERBOSITY = 1
 TEST_LABELS = ["tests"]
 
+
+# If not running with `python setup.py test` then
+# this will make sure the correct settings are
+# configured.
 if not settings.configured:
     settings.configure(
         DATABASE_ENGINE='sqlite3',
